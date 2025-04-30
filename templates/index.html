@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h6 class="text-center">The App listens to "Time" or "What is the time" or "Start", "Stop", or "Thank you" or "Well done" or "Okay". Please open on phone, tablet, or computer with Chrome Browser</h6>
+<div class="card mx-auto" style="max-width: 500px">
+    <div class="card-body">
+
+        <video id="video" autoplay muted></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
+
+    <div id="detections">
+        <h3>Detected Items:</h3>
+        <div id="items"></div>
+    </div>
+
+    <div id="commands">
+        <h3>Voice Command:</h3>
+        <p id="commandText">Listening...</p>
+    </div>
+
+    <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const itemsDiv = document.getElementById('items');
+    const commandText = document.getElementById('commandText');
+    const ctx = canvas.getContext('2d');
+
+    let detecting = true;
+    let lookingFor = null;
+    let lastSpoken = "";
+    let speaking = false;
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then((stream) => {
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        console.error("Error accessing camera:", err);
+        alert("Camera access is required to use this app.");
+      });
+
+    video.addEventListener('loadedmetadata', () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    });
+
+    function sendFrame() {
+      if (!detecting) return;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataURL = canvas.toDataURL('image/jpeg');
+
+      fetch('http://localhost:5000/detect', {
+        method: 'POST',
+        body: JSON.stringify({ image: dataURL }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(detections => {
+        drawDetections(detections);
+        listDetections(detections);
+
+        if (lookingFor) {
+          const found = detections.find(d => d.name.toLowerCase().includes(lookingFor));
+          if (found) {
+            speak(`I see a ${lookingFor}`);
+            lookingFor = null;
+          }
+        }
+      })
+      .catch(err => console.error('Error:', err));
+    }
+
+    function drawDetections(detections) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      detections.forEach(det => {
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        ctx.font = "18px Arial";
+        ctx.fillStyle = "red";
+
+        const x = det.xmin;
+        const y = det.ymin;
+        const width = det.xmax - det.xmin;
+        const height = det.ymax - det.ymin;
+
+        ctx.strokeRect(x, y, width, height);
+        ctx.fillText(det.name + ' ' + Math.round(det.confidence * 100) + '%', x, y > 20 ? y - 5 : y + 20);
+      });
+    }
+
+    function listDetections(detections) {
+      itemsDiv.innerHTML = '';
+      detections.forEach(det => {
+        const item = document.createElement('div');
+        item.className = 'detected-item';
+        item.style.padding = '5px';
+        item.style.margin = '5px 0';
+        item.style.backgroundColor = '#f8f9fa';
+        item.style.border = '1px solid #ddd';
+        item.style.borderRadius = '4px';
+        item.textContent = `${det.name} (${Math.round(det.confidence * 100)}%)`;
+        itemsDiv.appendChild(item);
+
+        const speech = `${det.name} detected with ${Math.round(det.confidence * 100)} percent confidence`;
+        speak(speech);
+      });
+    }
+
+    function speak(text) {
+      if (speaking || text === lastSpoken) return;
+
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+
+      speaking = true;
+      utter.onend = () => {
+        speaking = false;
+        lastSpoken = text;
+      };
+
+      synth.cancel();
+      synth.speak(utter);
+    }
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = function(event) {
+      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+      commandText.textContent = transcript;
+
+      if (transcript.includes("stop")) {
+        detecting = false;
+        speak("Object detection stopped");
+      } else if (transcript.includes("start")) {
+        detecting = true;
+        speak("Object detection started");
+      } else if (transcript.includes("thank you")) {
+        detecting = true;
+        speak("You are welcome");
+      } else if (transcript.includes("well done")) {
+        detecting = false;
+        speak("Don't mention it");
+      } else if (transcript.includes("okay")) {
+        detecting = false;
+        speak("Please remember this is a prototype");
+      } else if (transcript.includes("finding")) {
+        const match = transcript.match(/find the (.+)/);
+        if (match && match[1]) {
+          lookingFor = match[1].trim();
+          speak(`Looking for a ${lookingFor}`);
+        }
+      } else if (transcript.includes("time")) {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        const timeStr = `The time is ${hours}:${minutes} ${ampm}`;
+        speak(timeStr);
+  }
+    };
+
+    recognition.start();
+    setInterval(sendFrame, 1500);
+    </script>
+</div>
+
+{% endblock %}

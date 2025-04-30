@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="card mx-auto" style="max-width: 800px">
+    <div class="card-body">
+        <p><strong>Project Submission Proposal</strong></p>
+
+<strong>Title:</strong><p></p>
+        <strong>HiSense:</strong> AI-powered real time object detection assistant for the Visually Impaired Persons (VIPs) - (Prototype)
+<p></p>
+        <strong>Problem Statements:</strong><p></p>
+A lot of people are visually impaired, and they face challenges every day to detect close objects or walk around safely and independently. The traditional aids canes or someone holding them along to help the VIPs but might not necessary interpret surrounding to them in real time. And some without any help at all.
+        <p></p>
+        <strong>Proposed Solution:</strong><p></p>
+HiSense is a web-based AI assistant that uses real-time object detection with voice command to detect and announce the close objects to the user. The App also listens for voice commands like “Start”, “Stop”, and “Thank You” for now which we intend to add more voice command to better assist the VIPs. The App open webcam of computer or tablet or phone camera to feed the AI model and responds with audio feedback to guide the user safely.
+Currently the app can recognize 20 Images like: Person, Bicycle, Car, Apple, Motorcycle,
+<p></p>
+<strong>Impacts:</strong><p></p>
+            <ul>
+                    <li>Promotes mobility and independence for visually impaired persons</li>
+                    <li>Designed to work with basic internet access via a web browser</li>
+                    <li>Deployable on mobile devices in the future</li>
+            </ul>
+<p></p>
+        <strong>Technical Overview:</strong><p></p>
+            <ul>
+                    <li>Model: YOLOv8 for real-time object detection and Custom Trained Model</li>
+                    <li>Backend: Flask (Python)</li>
+                    <li>Frontend: HTML, JavaScript, and Bootstrap</li>
+                    <li>Speech-to-Text: (Web Speech API) for voice commands</li>
+                    <li>Text-to Speech: (Brower API) for responses</li>
+                    <li>Deployment: Hosted on render.com</li>
+            </ul>
+<p></p>
+        <strong>Demo Access:</strong><p></p>
+The App (HiSense) is live on
+<p></p>
+        <strong>Future Plans:</strong> <p></p>
+        <ul>
+                <li>Add localization for Nigerian dialects</li>
+                <li>Expand to mobile (Android) with offline capabilities</li>
+                <li>Include obstacle detection and emergency alerts</li>
+                <li>The App will be Free for every one to download from play store (Android) for the persons.</li>
+
+        </ul>
+<p></p>
+        <strong>Team:</strong> <p></p>
+        <strong>Name:</strong> Olatunde Samson<br/>
+        <strong>Role:</strong> AI/ML Developer, System Designer
+<br/><br/>
+        <strong>Acknowledgements:</strong><p></p>
+Open-sources tools like Ultralytics, YOLOv8, Flask and Python Packages
+<p></p>
+
+
+
+
+    </div>
+
+</div>
+
+
+{% endblock %}

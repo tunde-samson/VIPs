@@ -4,6 +4,5 @@
 
 This is to empower the VIPs to be able to move around within the society
 
-## Instructor
-
+### Instructor
 Tunde Samson
